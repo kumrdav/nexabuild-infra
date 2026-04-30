@@ -29,17 +29,6 @@ provider "aws" {
   }
 }
 
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
@@ -53,7 +42,7 @@ data "aws_ami" "amazon_linux" {
 resource "aws_security_group" "dev_sg" {
   name        = "nexabuild-dev-sg"
   description = "Security group for dev server"
-  vpc_id      = data.aws_vpc.default.id
+  vpc_id      = module.vpc.vpc_id
 
 
   ingress {
@@ -88,10 +77,19 @@ resource "aws_security_group" "dev_sg" {
 resource "aws_instance" "dev_server" {
   ami                    = data.aws_ami.amazon_linux.id
   instance_type          = var.instance_type
-  subnet_id              = data.aws_subnets.default.ids[0]
+  subnet_id              = module.vpc.public_subnet_id
   vpc_security_group_ids = [aws_security_group.dev_sg.id]
 
   tags = {
     Name = var.instance_name
   }
+}
+
+module "vpc" {
+  source = "../../modules/vpc"
+
+  vpc_cidr = "10.0.0.0/16"
+  public_subnet_cidr = "10.0.1.0/24"
+  private_subnet_cidr = "10.0.2.0/24"
+  environment = "dev"
 }

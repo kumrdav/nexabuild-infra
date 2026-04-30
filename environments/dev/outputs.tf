@@ -9,6 +9,11 @@ output "public_ip" {
 }
 
 output "vpc_id" {
-    description = "Default VPC ID being used"
-    value = data.aws_vpc.default.id
+  description = "VPC ID from VPC module"
+  value       = module.vpc.vpc_id
+}
+
+output "public_subnet_id" {
+  description = "Public subnet ID"
+  value       = module.vpc.public_subnet_id
 }
